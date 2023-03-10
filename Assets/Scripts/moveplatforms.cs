@@ -77,9 +77,8 @@ public class moveplatforms : MonoBehaviour
 		// Debug.Log($"{other.name} Exited {this.name}");
 
 		// Destroy the coroutine associated with the exiting item
-		Coroutine moveSyncRoutine;
 		// Only if the Coroutine has actually been invoked on it
-		if (playerMoveSyncDict.TryGetValue(other.gameObject, out moveSyncRoutine))
+		if (playerMoveSyncDict.TryGetValue(other.gameObject, out Coroutine moveSyncRoutine))
 		{
 			StopCoroutine(moveSyncRoutine);
 			playerMoveSyncDict.Remove(other.gameObject);
