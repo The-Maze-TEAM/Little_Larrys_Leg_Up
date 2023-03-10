@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class ResetPosition : MonoBehaviour
 {
-	public Transform _player;
+	[SerializeField]
+	private Transform _player;
 	private CharacterController control;
-	// Start is called before the first frame update
+	[SerializeField]
+	private Vector3 _teleportDestination = new Vector3(0, 30, 0);
+
+
 	void Start()
 	{
 		control = _player.GetComponent<CharacterController>();
