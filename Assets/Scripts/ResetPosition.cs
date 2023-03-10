@@ -23,12 +23,16 @@ public class ResetPosition : MonoBehaviour
 			// This method works, but is slightly more expensive.
 			// However, for scenarios where the framerate is significantly
 			// higher than the physics step, this method may be more reliable.
+
 			// It seems to call Physics.SyncTransforms under the hood.
-			    // control.enabled = false;
-			    // other.transform.position = _teleportDestination;
-			    // control.enabled = true;
-			        // Alternatively, you can do Edit > Project Settings > Physics > AutoSyncTransforms = True
-			        // Or set Physics.autoSyncTransforms to True via script.
+
+			// control.enabled = false;
+			// other.transform.position = _teleportDestination;
+			// control.enabled = true;
+
+			// Alternatively, you can do Edit > Project Settings > Physics > AutoSyncTransforms = True
+			// Or set Physics.autoSyncTransforms to True via script.
+
 			// We could also just ditch CharacterControllers altogether over Rigidbody physics,
 			// but I'm not in favor of that idea.
 
@@ -36,6 +40,12 @@ public class ResetPosition : MonoBehaviour
 			// and most performant option for this project.
 
 			// https://forum.unity.com/threads/character-controller-ignores-transform-position.617107/
+			// https://docs.unity3d.com/ScriptReference/Physics.SyncTransforms.html
+
+			// Typically this happens on its own but the CharacterController maintains
+			// its own definition of its position and overrides attempts to change it.
+
+			// Perhaps for other behaviors such as jumping, we can simply use LateUpdate instead.
 
 			other.transform.position = _teleportDestination;
 			Physics.SyncTransforms();
