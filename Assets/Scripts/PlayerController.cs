@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
 {
 	public CharacterController control;
 	// Exploding Face
+	[SerializeField]
+	private GameObject _face;
 	private Transform[] facePieces;
 	private bool faceExploded = false;
 	public Transform newFaceParent;
@@ -29,7 +31,7 @@ public class PlayerController : MonoBehaviour
 	void Start()
 	{
 		setRandomColors();
-		facePieces = this.transform.Find("Face").gameObject.GetComponentsInChildren<Transform>();
+		facePieces = _face.GetComponentsInChildren<Transform>();
 	}
 
 	void OnMove(InputValue moveInput)
@@ -165,7 +167,8 @@ public class PlayerController : MonoBehaviour
 		}
 		else
 			foreach (var item in facePieces)
-				item.gameObject.GetComponent<Rigidbody>().AddExplosionForce(150f, item.position, 75f, 30F);
+				if (item != null)
+					item.gameObject.GetComponent<Rigidbody>().AddExplosionForce(150f, item.position, 75f, 30F);
 
 	}
 }
