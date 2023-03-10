@@ -11,7 +11,6 @@ public class PlayerController : MonoBehaviour
 	private GameObject _face;
 	private Transform[] facePieces;
 	private bool faceExploded = false;
-	public Transform newFaceParent;
 
 	public Transform cam;
 	public float speed;
@@ -161,7 +160,7 @@ public class PlayerController : MonoBehaviour
 				Rigidbody faceGrav = item.gameObject.AddComponent<Rigidbody>();
 				faceGrav.useGravity = true;
 				faceGrav.AddExplosionForce(15f, item.position, 7.5f, 3.0F);
-				item.transform.parent = newFaceParent;
+				item.transform.parent = null;
 			}
 			faceExploded = true;
 		}
