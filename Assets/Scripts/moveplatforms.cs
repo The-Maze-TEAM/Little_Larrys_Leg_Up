@@ -22,7 +22,6 @@ public class moveplatforms : MonoBehaviour
 		originalPos = transform.position;
 		endPos =  originalPos + moveRange;
 		platformSpeed = Random.Range(seedSpeed, seedSpeed + seedSpeedRange);
-		moveStep = Vector3.zero;
 	}
 
 	void FixedUpdate()
