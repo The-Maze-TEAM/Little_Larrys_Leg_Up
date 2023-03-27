@@ -4,11 +4,17 @@ using UnityEngine;
 
 public class moveplatforms : MonoBehaviour
 {
+	[SerializeField]
+	private bool _pingPongPlatform = false;
+	[SerializeField] private bool[] _pingPongEnabledAxes = new bool[] { true, true, true };
+
 	[SerializeField] float seedSpeed = 1f, seedSpeedRange = 0.5f;
 	[SerializeField] Vector3 moveRange;
-	private Vector3 originalPos, orientation, endPos;
+
+	private Vector3 originalPos, orientation, endPos, moveStep;
 	private float platformSpeed;
-        // Define a dictionary to store the coroutines for each object
+
+	// Define a dictionary to store the coroutines for each object
 	private Dictionary<GameObject, Coroutine> playerMoveSyncDict = new Dictionary<GameObject, Coroutine>();
 
 	void Start()
@@ -20,14 +26,32 @@ public class moveplatforms : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		if (transform.position == originalPos)
-			orientation = endPos;
-		else if (transform.position == endPos)
-			orientation = originalPos;
+		if (_pingPongPlatform)
+			transform.position = originalPos + new Vector3(moveRange.x != 0 && _pingPongEnabledAxes[0]
+								       ? moveRange.x > 0
+								           ? Mathf.PingPong(Time.time * platformSpeed, moveRange.x)
+								           : -Mathf.PingPong(Time.time * platformSpeed, -moveRange.x)
+								       : 0,
+								       moveRange.y != 0 && _pingPongEnabledAxes[1]
+								       ? moveRange.y > 0
+								           ? Mathf.PingPong(Time.time * platformSpeed, moveRange.y)
+								           : -Mathf.PingPong(Time.time * platformSpeed, -moveRange.y)
+								       : 0,
+								       moveRange.z != 0 && _pingPongEnabledAxes[2]
+								       ? moveRange.z > 0
+								           ? Mathf.PingPong(Time.time * platformSpeed, moveRange.z)
+								           : -Mathf.PingPong(Time.time * platformSpeed, -moveRange.z)
+								       : 0);
+		else
+		{
+			if (transform.position == originalPos)
+				orientation = endPos;
+			else if (transform.position == endPos)
+				orientation = originalPos;
+			transform.position = Vector3.MoveTowards(transform.position, orientation, platformSpeed * Time.deltaTime);
+		}
 
-		transform.position = Vector3.MoveTowards(transform.position, orientation, platformSpeed * Time.deltaTime);
-
-	}
+    }
 
 	void OnTriggerEnter(Collider other)
 	{
@@ -53,9 +77,8 @@ public class moveplatforms : MonoBehaviour
 		// Debug.Log($"{other.name} Exited {this.name}");
 
 		// Destroy the coroutine associated with the exiting item
-		Coroutine moveSyncRoutine;
 		// Only if the Coroutine has actually been invoked on it
-		if (playerMoveSyncDict.TryGetValue(other.gameObject, out moveSyncRoutine))
+		if (playerMoveSyncDict.TryGetValue(other.gameObject, out Coroutine moveSyncRoutine))
 		{
 			StopCoroutine(moveSyncRoutine);
 			playerMoveSyncDict.Remove(other.gameObject);
@@ -80,7 +103,7 @@ public class moveplatforms : MonoBehaviour
 
 			// The character controller already smoothly handles gravity
 			// So if you're going down, we just ignore it here and let the CharacterController do it.
-			positionDiff.y = Mathf.Max(0f, positionDiff.y);
+			positionDiff.y = Mathf.Max(0f, positionDiff.y); 
 
 			if (objController != null)
 				objController.Move(positionDiff);

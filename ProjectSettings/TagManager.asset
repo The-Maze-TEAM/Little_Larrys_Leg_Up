@@ -6,11 +6,16 @@ TagManager:
   tags:
   - MobilePlatform
   - MatchingColors
+  - Trap
+  - Pickup
+  - Reset
+  - Ground
+  - Orb
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ground
   - Water
   - UI
   - 

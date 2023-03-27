@@ -5,26 +5,19 @@ using UnityEngine.UI;
 
 public class WinTrigger : MonoBehaviour
 {
-	private Text timeUI;
-	private Timer timeScript;
-
+    public Text timer;
+	public GameObject player;
+	public GameObject winCanvas;
 	void Start()
 	{
-		timeUI = GameObject.Find("TimerText").GetComponent<Text>();
-		timeScript = GameObject.Find("Player").GetComponent<Timer>();
 	}
 
-	void OnTriggerEnter(Collider other)
+	void OnTriggerEnter()
 	{
-		// Only run this on the player
-		if (other.name != "Player") return;
-
-		// Run the ExplodeFace Method from the PlayerController
-		other.GetComponent<PlayerController>().ExplodeFace();
-
-		// Blow up the timer text, then stop the script
-		timeUI.color = Color.green;
-		timeUI.fontSize = 60;
-		Destroy(timeScript);
+		timer.color = Color.green;
+		timer.fontSize = 69;
+        player.GetComponent<Timer>().Win();
+		winCanvas.SetActive(true);
+		//Destroy(player.GetComponent<Timer>());
 	}
 }

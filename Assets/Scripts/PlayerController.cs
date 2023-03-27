@@ -1,173 +1,110 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
-using UnityEngine.InputSystem;
-// using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-	public CharacterController control;
-	// Exploding Face
-	[SerializeField]
-	private GameObject _face;
-	private Transform[] facePieces;
-	private bool faceExploded = false;
+    public GameObject player;
+    public GameObject magicDoor;
+    private Transform resetSpawn;
+    public CharacterController controller;
+    public Transform cam;
 
-	public Transform cam;
-	public float speed;
-	// Speed and Duration of player rotation
-	private float turnSmoothTime = 10.0f;
-	// Jump-related vars
-	private float _maxJumpHeight;
-	private float heightJumped;
-	private bool jumped = false;
-	private bool disallownewjump = false;
-	public static Vector3 movement = Vector3.zero;
-	[SerializeField] private float zScaleFactor, yScaleFactor;
+	public GameObject endGameContainer;
+	private int orbs = 0;
+	private int health = 5;
 
-	// Player input as X/Y axes
-	private Vector2 _movementInput;
+    public float speed = 6f;
+    public float gravity = -9.81f;
+    public float jumpHeight = 3f;
 
-	void Start()
-	{
-		setRandomColors();
-		facePieces = _face.GetComponentsInChildren<Transform>();
-	}
+    public Transform groundCheck;
+    public float groundDistance = 0.4f;
+    public LayerMask groundMask;
 
-	void OnMove(InputValue moveInput)
-	{
-		_movementInput = moveInput.Get<Vector2>();
-	}
+    Vector3 velocity;
+    bool isGrounded;
 
-	void OnReset()
-	{
-		// SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().name);
-		setRandomColors();
-	}
 
-	void OnJump()
-	{
-		if (!disallownewjump || control.isGrounded)
-		{
+    public float turnSmoothTime = 0.1f;
+    float  turnSmoothVelocity;
 
-			if (!control.isGrounded)
-			{
-				disallownewjump = true;
-				_maxJumpHeight = 20f;
-			}
-			else
-			{
-				disallownewjump = false;
-				_maxJumpHeight = 30f;
-			}
-			jumped = true;
-			heightJumped = 0;
-		}
+    private void Start() 
+    {
+        
+    }
 
-	}
 
-	void OnExplode()
-	{
-		ExplodeFace();
-	}
+    private void Update()
+    {
 
-	// Update is called once per frame
-	void FixedUpdate()
-	{
-		captureAndSync();
-		handleJump();
-		control.Move(movement * Time.deltaTime);
- 	}
+        //gravity
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-	void captureAndSync()
-	{
-		movement = (Quaternion.Euler(0, cam.eulerAngles.y, 0) * new Vector3(_movementInput.x, 0.0f, _movementInput.y).normalized) * speed;
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+        velocity.y += gravity * Time.deltaTime;
 
-		if (movement.magnitude != 0)
-			syncAvatarWithDirection();
+        controller.Move(velocity * Time.deltaTime);
 
-	}
+        if(Input.GetKeyDown(KeyCode.Space)&&isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
-	void syncAvatarWithDirection()
-	{
-		Quaternion expectedRotation = Quaternion.LookRotation(movement, Vector3.up);
-		transform.rotation = Quaternion.Slerp(transform.rotation, expectedRotation, turnSmoothTime * Time.deltaTime);
-	}
 
-	void handleJump()
-	{
-		if (jumped && heightJumped < _maxJumpHeight)
-		{
-			movement.y += ((heightJumped += (_maxJumpHeight / 20)) * 1.5f);
-			// Quite literally squashes and stretches the character.
-			transform.localScale += new Vector3(0, yScaleFactor, zScaleFactor);
-		}
-		else
-		{
-			jumped = false;
-			if (transform.localScale != Vector3.one)
-				transform.localScale -= new Vector3(0, yScaleFactor, zScaleFactor);
-		}
+        // horizontal movement
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
-		movement.y += Physics.gravity.y;
-	}
 
-	void setRandomColors()
-	{
-		// Get all renderer components from the object
-		Renderer[] bodyMats = GetComponentsInChildren<Renderer>();
-		// Make a new list to store objects which have matching colors
-		List<GameObject> matchParentsList = new List<GameObject>();
+        if (direction.magnitude >= 0.1f)
+        {
+            //look direction
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-		foreach (var item in bodyMats)
-		{
-			if (item.transform.parent == null || // Don't add the main body to the list
-			    item.transform.parent.tag != "MatchingColors")// Check for the right tag
-			{
-				// Generate a random color and alpha, then update the Renderer
-				Color32 randomColor = new Color32((byte)Random.Range(0, 255),
-								  (byte)Random.Range(0, 255),
-								  (byte)Random.Range(0, 255),
-								  (byte)Random.Range(0, 255));
-				item.material.SetColor("_Color", randomColor);
-			}
-			else if (!matchParentsList.Contains(item.transform.parent.gameObject))
-				matchParentsList.Add(item.transform.parent.gameObject);
-		}
 
-		// This runs on parents whose children should have matching colors
-		foreach (GameObject matchParent in matchParentsList)
-		{
-			Color32 randomColor = new Color32((byte)Random.Range(0, 255),
-							  (byte)Random.Range(0, 255),
-							  (byte)Random.Range(0, 255),
-							  (byte)Random.Range(0, 255));
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+        }
 
-			// Get all renderer objects, which are children of the current GO
-			Renderer[] matchChildren = matchParent.GetComponentsInChildren<Renderer>();
 
-			foreach (var item in matchChildren)
-				item.material.SetColor("_Color", randomColor);
+    }
+    private void OnTriggerEnter(Collider other) //Teleport
+    {
 
-		}
-	}
+        if (other.gameObject.CompareTag("Reset"))
+        {
+            resetSpawn = other.GetComponent<Reset>().teleportSpawnPoint.transform;
+            controller.enabled = false;
+            player.transform.position = resetSpawn.position;
+            controller.enabled = true;
+            Debug.Log("Reset");
+        }
+        else if (other.gameObject.CompareTag("Orb"))
+        {
+            orbs++;
+            other.gameObject.SetActive(false);
+            if (orbs == 20)
+            {
+                GameObject.Find("Exit Door").GetComponent<OpenDoor>().opening = true;
+            }
+        }
+        else if (other.gameObject.CompareTag("Trap"))
+        {
+            health--;
 
-	public void ExplodeFace()
-	{
-		if (!faceExploded)
-		{
-			foreach (var item in facePieces)
-			{
-				Rigidbody faceGrav = item.gameObject.AddComponent<Rigidbody>();
-				faceGrav.useGravity = true;
-				faceGrav.AddExplosionForce(15f, item.position, 7.5f, 3.0F);
-				item.transform.parent = null;
-			}
-			faceExploded = true;
-		}
-		else
-			foreach (var item in facePieces)
-				if (item != null)
-					item.gameObject.GetComponent<Rigidbody>().AddExplosionForce(150f, item.position, 75f, 30F);
 
-	}
+        }
+    }
+
+
+
 }

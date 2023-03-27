@@ -1,24 +1,46 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
-	public Text TimerText;
-	private float runTime ;
-	private string minutes, seconds, milliseconds;
+    public Text TimerText;
+    private float time;
+    private float minutes;
+    private float seconds;
+    private float milliseconds;
+    private bool isRunning = true;
+    public Text FinalTime;
+    // Start is called before the first frame update
+    void Start()
+    {
+        time = 0f;
+    }
 
-	void Update()
-	{
-		runTime += Time.deltaTime;
-
-		// minutes = Mathf.FloorToInt(runTime / 60F).ToString("0");
-		// seconds = ":" + Mathf.FloorToInt(runTime % 60F).ToString("00");
-		// milliseconds = "." + Mathf.FloorToInt((runTime * 100f) % 100F).ToString("00");
-
-		// TimerText.text = minutes + seconds + milliseconds;
-
-		TimerText.text = Mathf.FloorToInt(runTime / 60F).ToString("0") + ":" + // Minutes
-			Mathf.FloorToInt(runTime % 60F).ToString("00") + "." + // Seconds
-			Mathf.FloorToInt((runTime * 100F) % 100F).ToString("00"); // Milliseconds
-	}
+    // Update is called once per frame
+    void Update()
+    {
+        if (isRunning)
+        {
+            time += Time.deltaTime;
+            minutes = Mathf.FloorToInt(time/60f);
+            seconds = Mathf.FloorToInt(time%60f);
+            milliseconds = time*1000%1000f;
+        }
+        TimerText.text = minutes.ToString() + ":" + seconds.ToString() + "." + milliseconds.ToString("0");
+    }
+    public void StartTimer()
+    {
+        isRunning = true;
+    }
+    public void StopTimer()
+    {
+        isRunning = false;
+    }
+    public void Win()
+    {
+        StopTimer();
+        FinalTime.text = TimerText.text;
+    }
 }
